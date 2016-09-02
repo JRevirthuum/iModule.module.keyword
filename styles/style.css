@@ -1,0 +1,17 @@
+/**
+ * @todo 모두 다시 개발되어야 합니다.
+ 
+.liveSearchControl {display:inline-block; position:relative; height:30px; z-index:10;}
+.liveSearchControl input {width:100%; height:30px; padding:2px 5px; font-size:12px; line-height:1.5; border-radius:3px; border:1px solid #cccccc; vertical-align:middle; color:#555555; background-color:#ffffff; box-shadow:inset 0 1px 1px rgba(0, 0, 0, 0.075); transition:border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s; box-sizing:border-box;}
+.liveSearchControl input:focus {border-color:#66afe9; outline:0; box-shadow:inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);}
+.liveSearchControl ul {box-sizing:border-box; width:100%; position:absolute; top:28px; left:0; z-index:1000; float:left; min-width:60px; padding:4px 0; margin:2px 0 0; font-size:12px; list-style:none; background-color:#ffffff; border:1px solid #66afe9; border-radius:0px 0px 3px 3px; background-clip:padding-box; max-height:202px; overflow-y:auto; overflow:auto; border-top:0px;}
+.liveSearchControl ul li {display:block; padding:3px 10px; clear:both; font-weight:normal; color:#333333; white-space:nowrap; cursor:pointer; overflow:hidden; text-overflow:ellipsis; height:18px; line-height:18px;}
+.liveSearchControl ul li:hover, .liveSearchControl ul li.selected {outline:0; color:#ffffff; text-decoration:none; background-color:#428bca;}
+.liveSearchControl button {box-sizing:border-box; position:absolute; z-index:1; top:0px; right:0px; width:30px; height:30px; border-radius:0px 3px 3px 0px; border:1px solid transparent; white-space:nowrap; -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; -o-user-select:none; user-select:none; text-decoration:none !important; cursor:pointer; z-index:2000;}
+.liveSearchControl button:focus {outline:thin dotted #333; outline:5px auto -webkit-focus-ring-color; outline-offset:-2px;}
+.liveSearchControl button:hover, .liveSearchControl button:focus {text-decoration:none;}
+.liveSearchControl button:active, .liveSearchControl button.active {background-image:none; outline:0; box-shadow:inset 0 3px 5px rgba(0, 0, 0, 0.125);}
+.liveSearchControl button.disabled, .liveSearchControl button[disabled], fieldset[disabled] .liveSearchControl button {pointer-events:none; cursor:not-allowed; opacity:0.65; filter:alpha(opacity=65); box-shadow:none;}
+.liveSearchControlExtend input {border-radius:3px 3px 0px 0px;}
+.liveSearchControlExtend button {border-radius:0px 3px 0px 0px;}
+*/
