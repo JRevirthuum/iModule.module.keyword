@@ -1,6 +1,6 @@
 <?php
 /**
- * 이 파일은 iModule Keyword 모듈의 일부입니다. (https://www.imodule.kr)
+ * 이 파일은 iModule 키워드모듈의 일부입니다. (https://www.imodule.kr)
  *
  * 전달된 키워드를 분리하여 분리된 키워드와 앞부분이 일치하는 자동검색어 목록을 반환합니다.
  *

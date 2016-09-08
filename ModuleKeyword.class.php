@@ -1,13 +1,13 @@
 <?php
 /**
- * 이 파일은 iModule Keyword 모듈의 일부입니다. (https://www.imodule.kr)
+ * 이 파일은 iModule 키워드모듈의 일부입니다. (https://www.imodule.kr)
  *
- * 키워드 모듈은 iModule 상에서 검색되어지는 모든 키워드 데이터를 관리하고, 자동검색어를 제공합니다.
+ * 홈페이지에서 검색되는 키워드와 관련된 전반적인 기능을 관리합니다.
  * 
  * @file /modules/keyword/ModuleKeyword.class.php
  * @author Arzz (arzz@arzz.com)
  * @license MIT License
- * @version 3.0.0.160902
+ * @version 3.0.0.160903
  */
 class ModuleKeyword {
 	/**
@@ -19,10 +19,8 @@ class ModuleKeyword {
 	/**
 	 * DB 관련 변수정의
 	 *
-	 * @private DB $DB DB에 접속하고 데이터를 처리하기 위한 DB class (@see /classes/DB.class.php)
 	 * @private string[] $table DB 테이블 별칭 및 원 테이블명을 정의하기 위한 변수
 	 */
-	private $DB;
 	private $table;
 	
 	/**
@@ -91,14 +89,26 @@ class ModuleKeyword {
 	}
 	
 	/**
-	 * 사이트 외부에서 현재 모듈의 API를 호출하였을 경우, API 요청을 처리하기 위한 함수
+	 * 사이트 외부에서 현재 모듈의 API를 호출하였을 경우, API 요청을 처리하기 위한 함수로 API 실행결과를 반환한다.
+	 * 소스코드 관리를 편하게 하기 위해 각 요쳥별로 별도의 PHP 파일로 관리한다.
 	 *
 	 * @param string $api API명
 	 * @return object $datas API처리후 반환 데이터 (해당 데이터는 /api/index.php 를 통해 API호출자에게 전달된다.)
 	 * @see /api/index.php
+	 * @todo 최근키워드, 인기키워드 등 API 제공
 	 */
 	function getApi($api) {
-		// @todo 최근키워드, 인기키워드 등 API 제공
+		$data = new stdClass();
+		$values = new stdClass();
+		
+		/**
+		 * 모듈의 api 폴더에 $api 에 해당하는 파일이 있을 경우 불러온다.
+		 */
+		if (is_file($this->Module->getPath().'/api/'.$api.'.php') == true) {
+			INCLUDE $this->Module->getPath().'/api/'.$api.'.php';
+		}
+		
+		return $data;
 	}
 	
 	/**
@@ -123,22 +133,29 @@ class ModuleKeyword {
 		
 		$temp = explode('/',$code);
 		if (count($temp) == 1) {
-			return isset($this->lang->$code) == true ? $this->lang->$code : ($this->oLang != null && isset($this->oLang->$code) == true ? $this->oLang->$code : '');
+			return isset($this->lang->$code) == true ? $this->lang->$code : ($this->oLang != null && isset($this->oLang->$code) == true ? $this->oLang->$code : $code);
 		} else {
 			$string = $this->lang;
 			for ($i=0, $loop=count($temp);$i<$loop;$i++) {
-				if (isset($string->{$temp[$i]}) == true) $string = $string->{$temp[$i]};
-				else $string = null;
+				if (isset($string->{$temp[$i]}) == true) {
+					$string = $string->{$temp[$i]};
+				} else {
+					$string = null;
+					break;
+				}
 			}
+			
+			if ($string != null) return $string;
+			if ($this->oLang == null) return $code;
 			
 			if ($string == null && $this->oLang != null) {
 				$string = $this->oLang;
 				for ($i=0, $loop=count($temp);$i<$loop;$i++) {
 					if (isset($string->{$temp[$i]}) == true) $string = $string->{$temp[$i]};
-					else $string = null;
+					return $code;
 				}
 			}
-			return $string == null ? '' : $string;
+			return $string;
 		}
 	}
 	
@@ -249,13 +266,10 @@ class ModuleKeyword {
 		$results = new stdClass();
 		
 		/**
-		 * 모듈의 process 파일에 $action 에 해당하는 파일이 있을 경우 불러온다.
+		 * 모듈의 process 폴더에 $action 에 해당하는 파일이 있을 경우 불러온다.
 		 */
 		if (is_file($this->Module->getPath().'/process/'.$action.'.php') == true) {
 			INCLUDE $this->Module->getPath().'/process/'.$action.'.php';
-		}
-		if ($action == 'livesearch') {
-			
 		}
 		
 		return $results;
