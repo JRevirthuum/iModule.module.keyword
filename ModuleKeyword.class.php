@@ -75,7 +75,8 @@ class ModuleKeyword {
 	 * @return DB $DB
 	 */
 	function db() {
-		return $this->IM->db($this->Module->getInstalled()->database);
+		if ($this->DB == null || $this->DB->ping() === false) $this->DB = $this->IM->db($this->getModule()->getInstalled()->database);
+		return $this->DB;
 	}
 	
 	/**
@@ -116,47 +117,97 @@ class ModuleKeyword {
 	 * 코드에 해당하는 문자열이 없을 경우 1차적으로 package.json 에 정의된 기본언어셋의 텍스트를 반환하고, 기본언어셋 텍스트도 없을 경우에는 코드를 그대로 반환한다.
 	 *
 	 * @param string $code 언어코드
+	 * @param string $replacement 일치하는 언어코드가 없을 경우 반환될 메세지 (기본값 : null, $code 반환)
 	 * @return string $language 실제 언어셋 텍스트
 	 */
-	function getLanguage($code) {
+	function getText($code,$replacement=null) {
 		if ($this->lang == null) {
-			if (file_exists($this->Module->getPath().'/languages/'.$this->IM->language.'.json') == true) {
-				$this->lang = json_decode(file_get_contents($this->Module->getPath().'/languages/'.$this->IM->language.'.json'));
-				if ($this->IM->language != $this->Module->getPackage()->language) {
-					$this->oLang = json_decode(file_get_contents($this->Module->getPath().'/languages/'.$this->Module->getPackage()->language.'.json'));
+			if (is_file($this->getModule()->getPath().'/languages/'.$this->IM->language.'.json') == true) {
+				$this->lang = json_decode(file_get_contents($this->getModule()->getPath().'/languages/'.$this->IM->language.'.json'));
+				if ($this->IM->language != $this->getModule()->getPackage()->language && is_file($this->getModule()->getPath().'/languages/'.$this->getModule()->getPackage()->language.'.json') == true) {
+					$this->oLang = json_decode(file_get_contents($this->getModule()->getPath().'/languages/'.$this->getModule()->getPackage()->language.'.json'));
 				}
-			} else {
-				$this->lang = json_decode(file_get_contents($this->Module->getPath().'/languages/'.$this->Module->getPackage()->language.'.json'));
+			} elseif (is_file($this->getModule()->getPath().'/languages/'.$this->getModule()->getPackage()->language.'.json') == true) {
+				$this->lang = json_decode(file_get_contents($this->getModule()->getPath().'/languages/'.$this->getModule()->getPackage()->language.'.json'));
 				$this->oLang = null;
 			}
 		}
 		
+		$returnString = null;
 		$temp = explode('/',$code);
-		if (count($temp) == 1) {
-			return isset($this->lang->$code) == true ? $this->lang->$code : ($this->oLang != null && isset($this->oLang->$code) == true ? $this->oLang->$code : $code);
-		} else {
-			$string = $this->lang;
-			for ($i=0, $loop=count($temp);$i<$loop;$i++) {
-				if (isset($string->{$temp[$i]}) == true) {
-					$string = $string->{$temp[$i]};
-				} else {
-					$string = null;
-					break;
-				}
+		
+		$string = $this->lang;
+		for ($i=0, $loop=count($temp);$i<$loop;$i++) {
+			if (isset($string->{$temp[$i]}) == true) {
+				$string = $string->{$temp[$i]};
+			} else {
+				$string = null;
+				break;
 			}
-			
-			if ($string != null) return $string;
-			if ($this->oLang == null) return $code;
-			
+		}
+		
+		if ($string != null) {
+			$returnString = $string;
+		} elseif ($this->oLang != null) {
 			if ($string == null && $this->oLang != null) {
 				$string = $this->oLang;
 				for ($i=0, $loop=count($temp);$i<$loop;$i++) {
-					if (isset($string->{$temp[$i]}) == true) $string = $string->{$temp[$i]};
-					return $code;
+					if (isset($string->{$temp[$i]}) == true) {
+						$string = $string->{$temp[$i]};
+					} else {
+						$string = null;
+						break;
+					}
 				}
 			}
-			return $string;
+			
+			if ($string != null) $returnString = $string;
 		}
+		
+		/**
+		 * 언어셋 텍스트가 없는경우 iModule 코어에서 불러온다.
+		 */
+		if ($returnString != null) return $returnString;
+		elseif (in_array(reset($temp),array('text','button','action')) == true) return $this->IM->getText($code,$replacement);
+		else return $replacement == null ? $code : $replacement;
+	}
+	
+	/**
+	 * 상황에 맞게 에러코드를 반환한다.
+	 *
+	 * @param string $code 에러코드
+	 * @param object $value(옵션) 에러와 관련된 데이터
+	 * @param boolean $isRawData(옵션) RAW 데이터 반환여부
+	 * @return string $message 에러 메세지
+	 */
+	function getErrorText($code,$value=null,$isRawData=false) {
+		$message = $this->getText('error/'.$code,$code);
+		if ($message == $code) return $this->IM->getErrorText($code,$value,null,$isRawData);
+		
+		$description = null;
+		switch ($code) {
+			case 'NOT_ALLOWED_SIGNUP' :
+				if ($value != null && is_object($value) == true) {
+					$description = $value->title;
+				}
+				break;
+				
+			case 'DISABLED_LOGIN' :
+				if ($value != null && is_numeric($value) == true) {
+					$description = str_replace('{SECOND}',$value,$this->getText('text/remain_time_second'));
+				}
+				break;
+			
+			default :
+				if (is_object($value) == false && $value) $description = $value;
+		}
+		
+		$error = new stdClass();
+		$error->message = $message;
+		$error->description = $description;
+		
+		if ($isRawData === true) return $error;
+		else return $this->IM->getErrorText($error);
 	}
 	
 	/**
@@ -250,6 +301,37 @@ class ModuleKeyword {
 	 */
 	function getLivecode($str) {
 		return $this->getEngcode($this->getKeycode($str));
+	}
+	
+	/**
+	 * FULLTEXT 인덱스 검색을 위한 WHERE 절을 추가한다.
+	 *
+	 * @param &$DB 디비 객체
+	 * @param string[] $fields 검색할 필드
+	 * @param string $keyword 키워드
+	 */
+	function getWhere(&$DB,$fields,$keyword) {
+		$db = $DB->db();
+		
+		if ($db->type == 'mysql') {
+			$mysqli = $DB->mysqli();
+			
+			if (version_compare($mysqli->server_info,'5.7.6','>=') == true) {
+				$DB->where("MATCH(".implode(',',$fields).") AGAINST (? IN BOOLEAN MODE)",array($keyword));
+			} else {
+				$keyword = explode(' ',$keyword);
+				$keyword = array_unique($keyword);
+			
+				for ($i=0, $loop=count($keyword);$i<$loop;$i++) {
+					$keyword[$i] = $keyword[$i].'*';
+				}
+				$keyword = implode(' ',$keyword);
+				
+				$DB->where("MATCH(".implode(',',$fields).") AGAINST (? IN BOOLEAN MODE)",array($keyword));
+			}
+		}
+		
+		return $DB;
 	}
 	
 	/**
