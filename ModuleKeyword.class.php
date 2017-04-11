@@ -21,6 +21,7 @@ class ModuleKeyword {
 	 *
 	 * @private string[] $table DB 테이블 별칭 및 원 테이블명을 정의하기 위한 변수
 	 */
+	private $DB;
 	private $table;
 	
 	/**
