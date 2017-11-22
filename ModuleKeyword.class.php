@@ -7,7 +7,8 @@
  * @file /modules/keyword/ModuleKeyword.class.php
  * @author Arzz (arzz@arzz.com)
  * @license MIT License
- * @version 3.0.0.160903
+ * @version 3.0.0
+ * @modified 2017. 11. 22.
  */
 class ModuleKeyword {
 	/**
@@ -164,6 +165,8 @@ class ModuleKeyword {
 			
 			if ($string != null) $returnString = $string;
 		}
+		
+		$this->IM->fireEvent('afterGetText',$this->getModule()->getName(),$code,$returnString);
 		
 		/**
 		 * 언어셋 텍스트가 없는경우 iModule 코어에서 불러온다.
@@ -346,15 +349,21 @@ class ModuleKeyword {
 	 * @see /process/index.php
 	 */
 	function doProcess($action) {
-		$values = new stdClass();
 		$results = new stdClass();
+		
+		$values = (object)get_defined_vars();
+		$this->IM->fireEvent('beforeDoProcess',$this->getModule()->getName(),$action,$values);
 		
 		/**
 		 * 모듈의 process 폴더에 $action 에 해당하는 파일이 있을 경우 불러온다.
 		 */
-		if (is_file($this->Module->getPath().'/process/'.$action.'.php') == true) {
-			INCLUDE $this->Module->getPath().'/process/'.$action.'.php';
+		if (is_file($this->getModule()->getPath().'/process/'.$action.'.php') == true) {
+			INCLUDE $this->getModule()->getPath().'/process/'.$action.'.php';
 		}
+		
+		unset($values);
+		$values = (object)get_defined_vars();
+		$this->IM->fireEvent('afterDoProcess',$this->getModule()->getName(),$action,$values,$results);
 		
 		return $results;
 	}
