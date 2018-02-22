@@ -305,7 +305,7 @@ class ModuleKeyword {
 	 * @return string $liveStr
 	 */
 	function getLivecode($str) {
-		return $this->getEngcode($this->getKeycode($str));
+		return strtolower($this->getEngcode($this->getKeycode($str)));
 	}
 	
 	/**
@@ -337,6 +337,36 @@ class ModuleKeyword {
 		}
 		
 		return $DB;
+	}
+	
+	/**
+	 * 선택된 DOM 영역내에서 키워드를 강조하고, 키워드 검색기록을 기록한다.
+	 *
+	 * @param string $keyword 키워드
+	 * @param string $dom DOM 셀렉터 (기본값 : body)
+	 */
+	function mark($keyword,$dom='body') {
+		$this->IM->addHeadResource('script',$this->getModule()->getDir().'/scripts/mark.js');
+		$this->IM->addBodyContent('<script>$(document).ready(function() { $("'.$dom.'").mark("'.$keyword.'",{acrossElements:true,caseSensitive:true}); });</script>');
+		
+		$storedKeywords = Request('IM_KEYWORDS','session') != null ? Request('IM_KEYWORDS','session') : array();
+		if (in_array($keyword,$storedKeywords) == false) {
+			$storedKeywords[] = $keyword;
+			
+			$keywords = explode(' ',$keyword);
+			foreach ($keywords as $keyword) {
+				$keyword = trim($keyword);
+				if (strlen($keyword) == 0) continue;
+				
+				$stored = $this->db()->select($this->table->keyword)->where('keyword',$keyword)->getOne();
+				$keycode = $stored == null ? $this->getEngCode($this->getKeycode($keyword)) : $stored->keycode;
+				$hit = $stored == null ? 0 : $stored->hit;
+				
+				$this->db()->replace($this->table->keyword,array('keyword'=>$keyword,'keycode'=>$keycode,'hit'=>++$hit,'latest_search'=>time()))->execute();
+			}
+			
+			$_SESSION['IM_KEYWORDS'] = $storedKeywords;
+		}
 	}
 	
 	/**

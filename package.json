@@ -27,27 +27,32 @@
 			"columns":{
 				"keyword":{
 					"type":"varchar",
-					"length":30
+					"length":30,
+					"comment":"키워드"
 				},
 				"keycode":{
 					"type":"varchar",
-					"length":60
+					"length":60,
+					"comment":"자동완성코드"
 				},
 				"hit":{
 					"type":"int",
 					"length":11,
-					"default":0
+					"default":0,
+					"comment":"검색수"
 				},
-				"last_search":{
+				"latest_search":{
 					"type":"int",
 					"length":11,
-					"default":0
+					"default":0,
+					"comment":"마지막검색시각"
 				}
 			},
 			"indexes":{
 				"keyword":"primary_key",
 				"keycode":"index"
-			}
+			},
+			"comment":"키워드 테이블"
 		}
 	}
 }
