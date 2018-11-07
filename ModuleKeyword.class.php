@@ -266,7 +266,7 @@ class ModuleKeyword {
 		}
 
 		$splitStr = '';
-		while (list($key,$code) = each($unicode)) {
+		foreach ($unicode as $key=>$code) {
 			if ($code >= 44032 && $code <= 55203) {
 				$temp = $code-44032;
 				$cho = (int)($temp/21/28);
